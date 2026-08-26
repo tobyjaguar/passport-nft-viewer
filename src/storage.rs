@@ -19,6 +19,8 @@ pub use fs::Location;
 
 #[derive(Debug)]
 pub enum StorageError {
+    /// No drive inserted / volume not mounted.
+    NoMedia,
     NotFound,
     AccessDenied,
     Io(String),
@@ -27,6 +29,7 @@ pub enum StorageError {
 impl core::fmt::Display for StorageError {
     fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
         match self {
+            StorageError::NoMedia => write!(f, "nothing inserted"),
             StorageError::NotFound => write!(f, "not found"),
             StorageError::AccessDenied => write!(f, "access denied"),
             StorageError::Io(e) => write!(f, "{e}"),
@@ -36,6 +39,7 @@ impl core::fmt::Display for StorageError {
 
 fn map_err(e: fs::Error) -> StorageError {
     match e {
+        fs::Error::NoMedia => StorageError::NoMedia,
         fs::Error::FileNotFound => StorageError::NotFound,
         fs::Error::AccessDenied => StorageError::AccessDenied,
         other => StorageError::Io(format!("{other:?}")),

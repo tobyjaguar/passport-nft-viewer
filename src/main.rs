@@ -51,6 +51,11 @@ fn load_bundle(ui: &AppWindow, location: storage::Location) {
 
     let bytes = match storage::read_file(location, bundle::MANIFEST_PATH, bundle::MAX_MANIFEST_BYTES) {
         Ok(b) => b,
+        Err(storage::StorageError::NoMedia) => {
+            log::info!("nft-viewer: no media at {where_}");
+            cb.set_status(format!("No {where_} found. Insert one with an nft/ bundle and tap Load again.").into());
+            return;
+        }
         Err(e) => {
             log::warn!("nft-viewer: read {} on {where_}: {e}", bundle::MANIFEST_PATH);
             let hint = match storage::list_dir(location, "") {
