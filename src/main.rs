@@ -103,7 +103,13 @@ fn load_bundle(ui: &AppWindow, state: &Rc<RefCell<State>>, location: storage::Lo
         Ok(b) => b,
         Err(storage::StorageError::NoMedia) => {
             log::info!("nft-viewer: no media at {where_}");
-            cb.set_status(format!("No {where_} found. Insert one with an nft/ bundle and tap Load again.").into());
+            let msg = match location {
+                storage::Location::Airlock => {
+                    "The Airlock is in use by the computer on USB. Unplug the cable, then tap Load from Airlock again.".to_string()
+                }
+                _ => format!("No {where_} found. Insert one with an nft/ bundle and tap Load again."),
+            };
+            cb.set_status(msg.into());
             return;
         }
         Err(e) => {
