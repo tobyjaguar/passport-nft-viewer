@@ -5,13 +5,35 @@ export struct ItemRow {
     title: string,
     subtitle: string,
     detail: string,
+    loadable: bool,
+}
+
+export struct TraitRow {
+    label: string,
+    value: string,
 }
 
 export global Callbacks {
+    // ---- Source screen ----
     in property <string> status: "(starting…)";
     in property <string> owner: "";
     in property <string> provenance: "";
     in property <[ItemRow]> items: [];
     // 0 = USB drive, 1 = Airlock
     callback load-from(int);
+
+    // ---- Gallery screen ----
+    // 0 = source, 1 = gallery
+    in property <int> screen: 0;
+    in property <image> current-image;
+    in property <string> current-title: "";
+    in property <string> current-collection: "";
+    in property <string> current-position: "";
+    in property <string> current-description: "";
+    in property <string> current-error: "";
+    in property <[TraitRow]> current-traits: [];
+    callback open-item(int);
+    callback next-item();
+    callback prev-item();
+    callback close-gallery();
 }

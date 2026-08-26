@@ -8,11 +8,223 @@ import {
     ControlSize,
     ButtonVariant,
 } from "@ui/theme.slint";
-import { Callbacks, ItemRow } from "callbacks.slint";
+import { Callbacks, ItemRow, TraitRow } from "callbacks.slint";
 import { Button } from "@ui/button.slint";
 import { Card } from "@ui/card.slint";
+import { Chip } from "@ui/chip.slint";
+import { MediaImage } from "@ui/image_view.slint";
 
-export { Callbacks, ItemRow, Theme, Images, ControlSize }
+export { Callbacks, ItemRow, TraitRow, Theme, Images, ControlSize }
+
+component SourceScreen inherits VerticalLayout {
+    padding-left: Theme.spacing-xl;
+    padding-right: Theme.spacing-xl;
+    padding-top: Theme.spacing-xl + UISize.control-center-status-bar-height;
+    padding-bottom: Theme.spacing-xl;
+    spacing: Theme.spacing-lg;
+
+    Text {
+        text: "NFT Viewer";
+        color: Theme.palette-muted;
+        font-family: Theme.font-primary;
+        font-size: Theme.font-size-body;
+        font-weight: Theme.font-weight-semibold;
+        horizontal-alignment: center;
+    }
+
+    Card {
+        width: 100%;
+        title: "Source";
+        body: Callbacks.status;
+        footer: Callbacks.owner == "" ? "" : "Owner " + Callbacks.owner;
+    }
+
+    if Callbacks.provenance != "": Text {
+        text: Callbacks.provenance;
+        color: Theme.palette-muted;
+        font-family: Theme.font-primary;
+        font-size: Theme.font-size-caption;
+        wrap: word-wrap;
+    }
+
+    Rectangle {
+        width: 100%;
+        vertical-stretch: 1;
+        clip: true;
+
+        Flickable {
+            width: 100%;
+            height: 100%;
+            viewport-height: list-content.preferred-height;
+
+            list-content := VerticalLayout {
+                width: parent.width;
+                spacing: Theme.spacing-md;
+
+                for item[i] in Callbacks.items: Card {
+                    width: 100%;
+                    title: item.title;
+                    subtitle: item.subtitle;
+                    footer: item.detail;
+                    interactive: item.loadable;
+                    clicked => { Callbacks.open-item(i); }
+                }
+            }
+        }
+    }
+
+    Button {
+        width: 100%;
+        text: "Load from USB drive";
+        size: ControlSize.lg;
+        full-width: true;
+        clicked => { Callbacks.load-from(0); }
+    }
+
+    Button {
+        width: 100%;
+        text: "Load from Airlock";
+        variant: ButtonVariant.secondary;
+        size: ControlSize.md;
+        full-width: true;
+        clicked => { Callbacks.load-from(1); }
+    }
+}
+
+component GalleryScreen inherits VerticalLayout {
+    padding-top: UISize.control-center-status-bar-height;
+    padding-bottom: Theme.spacing-lg;
+    spacing: 0px;
+
+    // ---- image, ~ the top 60% of the screen ----
+    Rectangle {
+        width: 100%;
+        height: 480px;
+        background: Theme.palette-card;
+        clip: true;
+
+        if Callbacks.current-error == "": MediaImage {
+            width: parent.width;
+            height: parent.height;
+            source: Callbacks.current-image;
+            fit: ImageFit.contain;
+            rounded: false;
+            show-border: false;
+        }
+
+        if Callbacks.current-error != "": Text {
+            width: parent.width - 2 * Theme.spacing-xl;
+            text: Callbacks.current-error;
+            color: Theme.palette-muted;
+            font-family: Theme.font-primary;
+            font-size: Theme.font-size-body;
+            horizontal-alignment: center;
+            vertical-alignment: center;
+            wrap: word-wrap;
+        }
+
+        // swipe/tap zones: left third = previous, right third = next
+        TouchArea {
+            x: 0; width: parent.width / 3; height: parent.height;
+            clicked => { Callbacks.prev-item(); }
+        }
+        TouchArea {
+            x: parent.width * 2 / 3; width: parent.width / 3; height: parent.height;
+            clicked => { Callbacks.next-item(); }
+        }
+    }
+
+    // ---- title sheet ----
+    VerticalLayout {
+        padding-left: Theme.spacing-xl;
+        padding-right: Theme.spacing-xl;
+        padding-top: Theme.spacing-lg;
+        spacing: Theme.spacing-sm;
+        vertical-stretch: 1;
+
+        HorizontalLayout {
+            spacing: Theme.spacing-md;
+            Text {
+                text: Callbacks.current-collection;
+                color: Theme.palette-muted;
+                font-family: Theme.font-primary;
+                font-size: Theme.font-size-caption;
+                font-weight: Theme.font-weight-semibold;
+                overflow: elide;
+                horizontal-stretch: 1;
+            }
+            Text {
+                text: Callbacks.current-position;
+                color: Theme.palette-muted;
+                font-family: Theme.font-primary;
+                font-size: Theme.font-size-caption;
+            }
+        }
+
+        Text {
+            text: Callbacks.current-title;
+            color: Theme.palette-foreground;
+            font-family: Theme.font-primary;
+            font-size: Theme.font-size-title;
+            font-weight: Theme.font-weight-semibold;
+            overflow: elide;
+        }
+
+        // traits as chips, wrapped into rows of three
+        Rectangle {
+            width: 100%;
+            vertical-stretch: 1;
+            clip: true;
+            Flickable {
+                width: 100%;
+                height: 100%;
+                viewport-height: traits-content.preferred-height;
+                traits-content := VerticalLayout {
+                    width: parent.width;
+                    spacing: Theme.spacing-sm;
+                    alignment: start;
+                    HorizontalLayout {
+                        spacing: Theme.spacing-sm;
+                        alignment: start;
+                        for t in Callbacks.current-traits: Chip {
+                            text: t.label + ": " + t.value;
+                        }
+                    }
+                    if Callbacks.current-description != "": Text {
+                        text: Callbacks.current-description;
+                        color: Theme.palette-muted;
+                        font-family: Theme.font-primary;
+                        font-size: Theme.font-size-caption;
+                        wrap: word-wrap;
+                    }
+                }
+            }
+        }
+
+        HorizontalLayout {
+            spacing: Theme.spacing-md;
+            Button {
+                text: "Back";
+                variant: ButtonVariant.secondary;
+                size: ControlSize.md;
+                clicked => { Callbacks.close-gallery(); }
+            }
+            Rectangle { horizontal-stretch: 1; }
+            Button {
+                text: "Prev";
+                variant: ButtonVariant.secondary;
+                size: ControlSize.md;
+                clicked => { Callbacks.prev-item(); }
+            }
+            Button {
+                text: "Next";
+                size: ControlSize.md;
+                clicked => { Callbacks.next-item(); }
+            }
+        }
+    }
+}
+
 export component AppWindow inherits Window {
     title: "NFT Viewer";
     preferred-width: UISize.screen-width;
@@ -24,81 +236,13 @@ export component AppWindow inherits Window {
         height: parent.height;
         background: Theme.palette-background;
 
-        VerticalLayout {
+        if Callbacks.screen == 0: SourceScreen {
             width: parent.width;
             height: parent.height;
-            padding-left: Theme.spacing-xl;
-            padding-right: Theme.spacing-xl;
-            padding-top: Theme.spacing-xl + UISize.control-center-status-bar-height;
-            padding-bottom: Theme.spacing-xl;
-            spacing: Theme.spacing-lg;
-
-            Text {
-                text: "NFT Viewer";
-                color: Theme.palette-muted;
-                font-family: Theme.font-primary;
-                font-size: Theme.font-size-body;
-                font-weight: Theme.font-weight-semibold;
-                horizontal-alignment: center;
-            }
-
-            Card {
-                width: 100%;
-                title: "Source";
-                body: Callbacks.status;
-                footer: Callbacks.owner == "" ? "" : "Owner " + Callbacks.owner;
-            }
-
-            if Callbacks.provenance != "": Text {
-                text: Callbacks.provenance;
-                color: Theme.palette-muted;
-                font-family: Theme.font-primary;
-                font-size: Theme.font-size-caption;
-                wrap: word-wrap;
-            }
-
-            // Scrolling item list, confined to its own stretch slot (see the
-            // kitchen-sink template for why the Flickable is wrapped).
-            Rectangle {
-                width: 100%;
-                vertical-stretch: 1;
-                clip: true;
-
-                Flickable {
-                    width: 100%;
-                    height: 100%;
-                    viewport-height: list-content.preferred-height;
-
-                    list-content := VerticalLayout {
-                        width: parent.width;
-                        spacing: Theme.spacing-md;
-
-                        for item in Callbacks.items: Card {
-                            width: 100%;
-                            title: item.title;
-                            subtitle: item.subtitle;
-                            footer: item.detail;
-                        }
-                    }
-                }
-            }
-
-            Button {
-                width: 100%;
-                text: "Load from USB drive";
-                size: ControlSize.lg;
-                full-width: true;
-                clicked => { Callbacks.load-from(0); }
-            }
-
-            Button {
-                width: 100%;
-                text: "Load from Airlock";
-                variant: ButtonVariant.secondary;
-                size: ControlSize.md;
-                full-width: true;
-                clicked => { Callbacks.load-from(1); }
-            }
+        }
+        if Callbacks.screen == 1: GalleryScreen {
+            width: parent.width;
+            height: parent.height;
         }
     }
 }

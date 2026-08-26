@@ -19,6 +19,8 @@ pub const FORMAT: u32 = 1;
 /// Hard caps (see docs/nft-viewer-scoping.md). `.raw` is uncompressed RGBA,
 /// 4 bytes/pixel, and loading copies it at least twice.
 pub const MAX_IMAGE_DIM: u32 = 480;
+// foundation-asset-tool emits RGB (3 B/px) for opaque images and RGBA (4 B/px)
+// otherwise; a 480×480 .raw measured 691,256 bytes. Allow the RGBA worst case.
 pub const MAX_IMAGE_BYTES: u64 = 4 * 480 * 480 + 4096; // texture + rkyv header slack
 pub const MAX_ITEMS: usize = 50;
 pub const MAX_MANIFEST_BYTES: u64 = 256 * 1024;
@@ -40,6 +42,24 @@ pub struct Manifest {
     pub items: Vec<Item>,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct Trait {
+    #[serde(default)]
+    pub trait_type: String,
+    #[serde(default, deserialize_with = "string_or_scalar")]
+    pub value: String,
+}
+
+/// Trait values in the wild are strings, numbers, or booleans; accept all.
+fn string_or_scalar<'de, D: serde::Deserializer<'de>>(d: D) -> Result<String, D::Error> {
+    let v = serde_json::Value::deserialize(d)?;
+    Ok(match v {
+        serde_json::Value::String(s) => s,
+        serde_json::Value::Null => String::new(),
+        other => other.to_string(),
+    })
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Item {
     pub file: String,
@@ -59,6 +79,12 @@ pub struct Item {
     pub token_id: String,
     #[serde(default)]
     pub standard: String,
+    #[serde(default)]
+    pub description: String,
+    #[serde(default)]
+    pub traits: Vec<Trait>,
+    #[serde(default)]
+    pub sha256: String,
 }
 
 #[derive(Debug)]
@@ -140,6 +166,17 @@ mod tests {
         assert!(m.items[0].loadable());
         assert!(!m.items[1].loadable());
         assert_eq!(m.items[1].display_name(), "Too Big");
+    }
+
+    #[test]
+    fn parses_traits_and_description() {
+        let m = parse_manifest(br#"{"format":1,"items":[{"file":"images/0001.raw","width":10,"height":10,"bytes":400,
+            "description":"d","traits":[{"trait_type":"Role","value":"Enchanter"},{"trait_type":"Tier","value":3}]}]}"#);
+        // numeric trait value is tolerated by the host tool (stringified) but a raw number must not break parsing here
+        let m = match m { Ok(m) => m, Err(e) => panic!("{e}") };
+        assert_eq!(m.items[0].description, "d");
+        assert_eq!(m.items[0].traits.len(), 2);
+        assert_eq!(m.items[0].traits[0].trait_type, "Role");
     }
 
     #[test]
