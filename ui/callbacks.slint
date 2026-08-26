@@ -31,7 +31,8 @@ export global Callbacks {
     in property <string> current-position: "";
     in property <string> current-description: "";
     in property <string> current-error: "";
-    in property <[TraitRow]> current-traits: [];
+    // traits pre-grouped into rows (2 per row) so they wrap on a 480px screen
+    in property <[[TraitRow]]> current-trait-rows: [];
     callback open-item(int);
     callback next-item();
     callback prev-item();

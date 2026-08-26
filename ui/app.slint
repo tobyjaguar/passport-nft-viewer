@@ -183,10 +183,10 @@ component GalleryScreen inherits VerticalLayout {
                     width: parent.width;
                     spacing: Theme.spacing-sm;
                     alignment: start;
-                    HorizontalLayout {
+                    for row in Callbacks.current-trait-rows: HorizontalLayout {
                         spacing: Theme.spacing-sm;
                         alignment: start;
-                        for t in Callbacks.current-traits: Chip {
+                        for t in row: Chip {
                             text: t.label + ": " + t.value;
                         }
                     }

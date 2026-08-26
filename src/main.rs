@@ -84,7 +84,7 @@ fn app_main(_cx: AppContext, ui: AppWindow) {
             let cb = ui.global::<Callbacks>();
             // Drop the resident texture before leaving the screen.
             cb.set_current_image(Image::default());
-            cb.set_current_traits(ModelRc::new(VecModel::<TraitRow>::from(Vec::new())));
+            cb.set_current_trait_rows(ModelRc::new(VecModel::<ModelRc<TraitRow>>::from(Vec::new())));
             cb.set_screen(0);
         });
     }
@@ -207,7 +207,12 @@ fn show_item(ui: &AppWindow, state: &Rc<RefCell<State>>, index: usize) {
     cb.set_current_collection(collection.into());
     cb.set_current_position(position.into());
     cb.set_current_description(description.into());
-    cb.set_current_traits(ModelRc::new(VecModel::from(traits)));
+    // Two chips per row: a 480px-wide screen fits two typical "Key: Value" chips.
+    let rows: Vec<ModelRc<TraitRow>> = traits
+        .chunks(2)
+        .map(|pair| ModelRc::new(VecModel::from(pair.to_vec())))
+        .collect();
+    cb.set_current_trait_rows(ModelRc::new(VecModel::from(rows)));
     cb.set_screen(1);
     state.borrow_mut().current = index;
 
