@@ -1,0 +1,17 @@
+// SPDX-FileCopyrightText: 2026 talgya
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+export struct ItemRow {
+    title: string,
+    subtitle: string,
+    detail: string,
+}
+
+export global Callbacks {
+    in property <string> status: "(starting…)";
+    in property <string> owner: "";
+    in property <string> provenance: "";
+    in property <[ItemRow]> items: [];
+    // 0 = USB drive, 1 = Airlock
+    callback load-from(int);
+}

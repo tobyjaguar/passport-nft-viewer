@@ -1,0 +1,104 @@
+// SPDX-FileCopyrightText: 2026 talgya
+// SPDX-License-Identifier: GPL-3.0-or-later
+
+import {
+    Theme,
+    UISize,
+    Images,
+    ControlSize,
+    ButtonVariant,
+} from "@ui/theme.slint";
+import { Callbacks, ItemRow } from "callbacks.slint";
+import { Button } from "@ui/button.slint";
+import { Card } from "@ui/card.slint";
+
+export { Callbacks, ItemRow, Theme, Images, ControlSize }
+export component AppWindow inherits Window {
+    title: "NFT Viewer";
+    preferred-width: UISize.screen-width;
+    preferred-height: UISize.screen-height;
+    background: Theme.palette-background;
+
+    Rectangle {
+        width: parent.width;
+        height: parent.height;
+        background: Theme.palette-background;
+
+        VerticalLayout {
+            width: parent.width;
+            height: parent.height;
+            padding-left: Theme.spacing-xl;
+            padding-right: Theme.spacing-xl;
+            padding-top: Theme.spacing-xl + UISize.control-center-status-bar-height;
+            padding-bottom: Theme.spacing-xl;
+            spacing: Theme.spacing-lg;
+
+            Text {
+                text: "NFT Viewer";
+                color: Theme.palette-muted;
+                font-family: Theme.font-primary;
+                font-size: Theme.font-size-body;
+                font-weight: Theme.font-weight-semibold;
+                horizontal-alignment: center;
+            }
+
+            Card {
+                width: 100%;
+                title: "Source";
+                body: Callbacks.status;
+                footer: Callbacks.owner == "" ? "" : "Owner " + Callbacks.owner;
+            }
+
+            if Callbacks.provenance != "": Text {
+                text: Callbacks.provenance;
+                color: Theme.palette-muted;
+                font-family: Theme.font-primary;
+                font-size: Theme.font-size-caption;
+                wrap: word-wrap;
+            }
+
+            // Scrolling item list, confined to its own stretch slot (see the
+            // kitchen-sink template for why the Flickable is wrapped).
+            Rectangle {
+                width: 100%;
+                vertical-stretch: 1;
+                clip: true;
+
+                Flickable {
+                    width: 100%;
+                    height: 100%;
+                    viewport-height: list-content.preferred-height;
+
+                    list-content := VerticalLayout {
+                        width: parent.width;
+                        spacing: Theme.spacing-md;
+
+                        for item in Callbacks.items: Card {
+                            width: 100%;
+                            title: item.title;
+                            subtitle: item.subtitle;
+                            footer: item.detail;
+                        }
+                    }
+                }
+            }
+
+            Button {
+                width: 100%;
+                text: "Load from USB drive";
+                size: ControlSize.lg;
+                full-width: true;
+                clicked => { Callbacks.load-from(0); }
+            }
+
+            Button {
+                width: 100%;
+                text: "Load from Airlock";
+                variant: ButtonVariant.secondary;
+                size: ControlSize.md;
+                full-width: true;
+                clicked => { Callbacks.load-from(1); }
+            }
+        }
+    }
+}
