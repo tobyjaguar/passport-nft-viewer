@@ -1,0 +1,84 @@
+<!doctype html>
+<!--
+SPDX-FileCopyrightText: 2026 talgya
+SPDX-License-Identifier: GPL-3.0-or-later
+
+Headless end-to-end run of the real pipeline (network, browser decoders, .raw
+encoder) with no UI. Serve web/ and open:
+
+  test/e2e.html?owner=0x…&chain=ethereum&max=3[&dump=1]
+
+The summary lands in <pre id="out"> as JSON and the title flips to "done", so a
+headless browser can capture it:
+
+  brave-browser --headless=new --disable-gpu --virtual-time-budget=120000 \
+    --dump-dom "http://127.0.0.1:8765/test/e2e.html?owner=0x…&max=3" | sed -n 's:.*<pre id="out">\(.*\)</pre>.*:\1:p'
+
+`dump=1` adds each .raw as base64 so it can be diffed against the CLI's output.
+`report=http://127.0.0.1:8766/` additionally POSTs the JSON there, for headless
+browsers whose --dump-dom does not wait for the run (Brave, at the time of writing):
+
+  python3 test/e2e-receiver.py 8766 out.json &
+  brave-browser --headless=new --disable-gpu --user-data-dir=/tmp/e2e-profile \
+    "http://127.0.0.1:8765/test/e2e.html?owner=0x…&max=3&report=http://127.0.0.1:8766/"
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>running</title>
+</head>
+<body>
+<pre id="out"></pre>
+<script type="module">
+  import { buildBundle } from '../js/pipeline.js';
+  import { decodeRawHeader, formatName } from '../js/raw.js';
+
+  const q = new URLSearchParams(location.search);
+  const out = document.getElementById('out');
+  const events = [];
+  const b64 = (u8) => {
+    let s = '';
+    for (let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+    return btoa(s);
+  };
+  const started = performance.now();
+  const finish = async (payload) => {
+    const json = JSON.stringify(payload);
+    out.textContent = json;
+    const report = q.get('report');
+    if (report) {
+      try { await fetch(report, { method: 'POST', body: json, mode: 'no-cors', headers: { 'content-type': 'text/plain' } }); } catch { /* receiver absent */ }
+    }
+    document.title = 'done';
+  };
+  window.addEventListener('unhandledrejection', (e) => finish({ ok: false, error: `unhandled: ${e.reason?.message ?? e.reason}`, stack: e.reason?.stack, events }));
+  window.addEventListener('error', (e) => finish({ ok: false, error: `error: ${e.message}`, events }));
+  try {
+    const r = await buildBundle({
+      chainKey: q.get('chain') ?? 'ethereum',
+      owner: q.get('owner'),
+      max: Number(q.get('max') ?? 3),
+      previews: false,
+      onEvent: (ev) => events.push(ev.type === 'item'
+        ? { index: ev.index, status: ev.status, name: ev.asset.name, reason: ev.reason }
+        : ev),
+    });
+    const files = r.files.map((f) => {
+      const entry = { path: f.path, bytes: f.data.length };
+      if (f.path.endsWith('.raw')) {
+        const h = decodeRawHeader(f.data);
+        entry.size = h.size; entry.rect = h.rect; entry.format = formatName(h.format); entry.dataLen = h.dataLen;
+      }
+      if (q.get('dump') === '1') entry.base64 = b64(f.data);
+      return entry;
+    });
+    await finish({
+      ok: true, ms: Math.round(performance.now() - started), source: r.source, items: r.items, skipped: r.skipped,
+      totalBytes: r.totalBytes, files, events, ua: navigator.userAgent,
+    });
+  } catch (e) {
+    await finish({ ok: false, error: String(e?.message ?? e), stack: e?.stack, events });
+  }
+</script>
+</body>
+</html>

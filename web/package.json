@@ -1,0 +1,11 @@
+{
+  "name": "passport-nft-wrapper",
+  "private": true,
+  "type": "module",
+  "description": "Static page that builds a passport-nft-viewer bundle in the browser and writes it to a USB drive or the Passport's Airlock. No build step, no dependencies.",
+  "license": "GPL-3.0-or-later",
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "serve": "python3 -m http.server 8765 --bind 127.0.0.1"
+  }
+}

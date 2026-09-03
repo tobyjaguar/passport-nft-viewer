@@ -33,6 +33,16 @@ Optional user-supplied keys (OpenSea, Alchemy) may be added as fallbacks later; 
 
 ## Using it
 
+**No install — the web page.** Open the NFT Wrapper (served from this repo's
+[`web/`](web/) via GitHub Pages), pick the chain, paste or QR-scan the address,
+**Fetch**, then **Write to drive…** and choose the drive's root folder. It runs
+entirely in your browser: Blockscout for the list, the image hosts for the
+pictures, a byte-exact port of the SDK's `.raw` writer for the textures. No
+server ever sees the address. Direct writing needs a Chromium browser; Firefox
+and Safari get a `.zip` to extract onto the drive. See [`web/README.md`](web/README.md).
+
+**The CLI** (reference implementation, same bundle):
+
 ```bash
 # host: build the CLI (workspace repo)
 cd host-tools/passport-nft-cli && cargo build --release
@@ -43,7 +53,7 @@ passport-nft-cli fetch --chain ethereum --owner 0xYourAddress --out "/media/$USE
 # device: NFTs → Load from USB drive (or Load from Airlock) → tap an item
 ```
 
-Airlock route: with the Passport connected, Files → Airlock → ⋯ → **Airlock Read & Write**; write the bundle from the computer; unplug the cable (the device can't read the Airlock while a computer owns it, and it reverts to read-only on unplug); then **Load from Airlock**.
+Airlock route (either tool): with the Passport connected, Files → Airlock → ⋯ → **Airlock Read & Write**; write the bundle from the computer (the web page's picker shows the volume as `AIRLOCK`); unplug the cable (the device can't read the Airlock while a computer owns it, and it reverts to read-only on unplug); then **Load from Airlock**.
 
 ## Build
 
@@ -68,6 +78,7 @@ Tests: `FOUNDATION_THEMES_RUST_DIR=$PWD/target/foundation/themes/rust cargo test
 
 ## Roadmap
 
+- Web wrapper polish: single-token import (contract + id) for what Blockscout misses; multi-address bundles once the device has an address selector.
 - Phase 1.5: Solana adapter; wrap/scroll long trait lists; description sheet.
 - Phase 2: take addresses from the eth-wallet's exported address list ("what do the keys on this device own"), still read-only.
 - Not planned: signing, buying/selling, on-device ownership verification, any network access from the device.

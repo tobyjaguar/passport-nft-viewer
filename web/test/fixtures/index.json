@@ -1,0 +1,52 @@
+[
+  {
+    "name": "opaque-7x5",
+    "width": 7,
+    "height": 5
+  },
+  {
+    "name": "opaque-8x6",
+    "width": 8,
+    "height": 6
+  },
+  {
+    "name": "rgba-margin-13x9",
+    "width": 13,
+    "height": 9
+  },
+  {
+    "name": "alphamap-6x6",
+    "width": 6,
+    "height": 6
+  },
+  {
+    "name": "transparent-4x4",
+    "width": 4,
+    "height": 4
+  },
+  {
+    "name": "jitter-5x4",
+    "width": 5,
+    "height": 4
+  },
+  {
+    "name": "jitter3-4x3",
+    "width": 4,
+    "height": 3
+  },
+  {
+    "name": "photo-64x48",
+    "width": 64,
+    "height": 48
+  },
+  {
+    "name": "translucent-9x7",
+    "width": 9,
+    "height": 7
+  },
+  {
+    "name": "solid-3x3",
+    "width": 3,
+    "height": 3
+  }
+]

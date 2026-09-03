@@ -1,0 +1,58 @@
+# SPDX-FileCopyrightText: 2026 talgya
+# SPDX-License-Identifier: GPL-3.0-or-later
+#
+# Publishes web/ (the in-browser bundle builder) to GitHub Pages. The .raw
+# writer's byte-for-byte parity tests gate every deploy, so a silent format
+# drift in a fixture regeneration can never reach users.
+#
+# One-time setup: Settings → Pages → Source: "GitHub Actions"
+#   (or: gh api -X POST repos/tobyjaguar/passport-nft-viewer/pages -f build_type=workflow)
+
+name: pages
+
+on:
+  push:
+    branches: [main]
+    paths: ['web/**', '.github/workflows/pages.yml']
+  pull_request:
+    paths: ['web/**', '.github/workflows/pages.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: node --test web/test/*.test.mjs
+      - name: vendored jsQR is the audited copy
+        run: |
+          echo "bc40c8a15196236b2314db0856f72ca0b49980cd5413b8c852a7349f5fee0859  web/vendor/jsQR.js" | sha256sum -c -
+
+  deploy:
+    if: github.event_name != 'pull_request'
+    needs: test
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+      - id: deployment
+        uses: actions/deploy-pages@v4

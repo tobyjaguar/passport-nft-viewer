@@ -1,0 +1,108 @@
+<!doctype html>
+<!--
+SPDX-FileCopyrightText: 2026 talgya
+SPDX-License-Identifier: GPL-3.0-or-later
+-->
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' blob: data:; media-src blob:; connect-src https: data:; font-src 'self'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="color-scheme" content="dark light">
+  <title>NFT Wrapper for Passport Prime</title>
+  <link rel="stylesheet" href="css/app.css">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' rx='3' fill='%23111'/%3E%3Crect x='3' y='3' width='10' height='10' rx='1' fill='%23e8b04b'/%3E%3C/svg%3E">
+</head>
+<body>
+<main>
+  <header>
+    <h1>NFT Wrapper <span class="muted">for Passport Prime</span></h1>
+    <p class="lede">Builds the <code>nft/</code> bundle the <strong>NFTs</strong> app on your Passport reads, and writes it straight onto the Passport's Airlock or a USB stick. Takes an <em>address</em>, never a key.</p>
+  </header>
+
+  <aside class="notice" id="privacy">
+    <strong>What leaves your browser.</strong> This page has no server. To find what the address holds it asks a public
+    <a href="https://www.blockscout.com/" rel="noopener">Blockscout</a> explorer, and it downloads each image from wherever the NFT points (IPFS gateways, project CDNs).
+    Those servers see your IP address and the address you enter — nothing else does. Read the source on
+    <a href="https://github.com/tobyjaguar/passport-nft-viewer" rel="noopener">GitHub</a>.
+  </aside>
+
+  <section class="card" id="step-fetch">
+    <h2><span class="step">1</span> What to fetch</h2>
+    <form id="fetch-form" autocomplete="off">
+      <div class="row">
+        <label for="chain">Chain</label>
+        <select id="chain" name="chain">
+          <option value="ethereum" selected>Ethereum</option>
+          <option value="base">Base</option>
+          <option value="robinhood">Robinhood Chain</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="owner">Address</label>
+        <div class="input-group">
+          <input id="owner" name="owner" type="text" inputmode="text" spellcheck="false" placeholder="0x…" pattern="0x[0-9a-fA-F]{40}" required>
+          <button type="button" id="scan" class="secondary" title="Scan an address QR with the camera">Scan QR</button>
+        </div>
+        <p class="hint">Watch-only. Paste the address whose NFTs you want on the device, or scan it from a phone wallet.</p>
+      </div>
+      <div class="row">
+        <label for="max">Max items</label>
+        <input id="max" name="max" type="number" min="1" max="50" value="50">
+        <p class="hint">The device caps a bundle at 50 items and 480 px per side; this page enforces the same limits.</p>
+      </div>
+      <div class="actions">
+        <button type="submit" id="fetch" class="primary">Fetch</button>
+        <button type="button" id="cancel" class="secondary" hidden>Cancel</button>
+      </div>
+    </form>
+    <p id="status" class="status" role="status" aria-live="polite"></p>
+    <ol id="items" class="items" hidden></ol>
+  </section>
+
+  <section class="card" id="step-write" hidden>
+    <h2><span class="step">2</span> Put it on the Passport</h2>
+    <p id="summary"></p>
+    <div class="write-options">
+      <div class="option" id="option-drive">
+        <button type="button" id="write" class="primary">Write to drive…</button>
+        <p class="hint">Pick the drive's <em>root</em> folder: <code>AIRLOCK</code> with the Passport plugged in, or your USB stick. The bundle goes into <code>nft/</code>; any older bundle there is replaced.</p>
+        <p class="hint" id="airlock-hint">Airlock is read-only until you allow writes on the device: <strong>Files → Airlock → ⋯ → Airlock Read &amp; Write</strong>. It goes back to read-only when the cable comes out.</p>
+      </div>
+      <div class="option">
+        <button type="button" id="zip" class="secondary">Download .zip</button>
+        <p class="hint">For browsers without direct drive access (Firefox, Safari). Extract it onto the drive so <code>nft/</code> sits at the top level.</p>
+      </div>
+    </div>
+    <p id="write-status" class="status" role="status" aria-live="polite"></p>
+    <div id="next-steps" class="notice ok" hidden></div>
+  </section>
+
+  <dialog id="scanner">
+    <h2>Scan address QR</h2>
+    <video id="scanner-video" muted playsinline></video>
+    <p id="scanner-status" class="hint">Point the camera at the wallet's address QR.</p>
+    <div class="actions"><button type="button" id="scanner-close" class="secondary">Close</button></div>
+  </dialog>
+
+  <footer>
+    <p>Companion to <a href="https://github.com/tobyjaguar/passport-nft-viewer" rel="noopener">passport-nft-viewer</a>. Produces the same bundle as <code>passport-nft-cli</code>, the reference implementation, and the <code>.raw</code> writer is checked byte for byte against the SDK's <code>foundation-asset-tool</code> on every deploy. GPL-3.0-or-later.</p>
+  </footer>
+</main>
+
+<template id="item-row">
+  <li class="item">
+    <canvas class="thumb" width="48" height="48" aria-hidden="true"></canvas>
+    <div class="item-body">
+      <div class="item-title"></div>
+      <div class="item-meta muted"></div>
+    </div>
+    <div class="item-state"></div>
+  </li>
+</template>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>
