@@ -2,6 +2,10 @@
 
 ## [Unreleased] — 2026-09-03 (web wrapper)
 
+**Verified on device the same day:** Brave (File System Access flag on) → Fetch → Write to
+drive… → `AIRLOCK` root → unplug → NFTs → Load from Airlock → tap an item → gallery. First
+bundle built without the SDK or the CLI. Hosted at https://tobyjaguar.github.io/passport-nft-viewer/
+
 ### Added
 - `web/`: static, no-server bundle builder ("plug in, open, paste, unplug"). Blockscout
   enumeration, in-browser image decode/resize, a byte-exact JS port of the SDK's `.raw`

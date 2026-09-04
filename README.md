@@ -33,8 +33,8 @@ Optional user-supplied keys (OpenSea, Alchemy) may be added as fallbacks later; 
 
 ## Using it
 
-**No install — the web page.** Open the NFT Wrapper (served from this repo's
-[`web/`](web/) via GitHub Pages), pick the chain, paste or QR-scan the address,
+**No install — the web page.** Open the NFT Wrapper at
+<https://tobyjaguar.github.io/passport-nft-viewer/> (this repo's [`web/`](web/), served by GitHub Pages), pick the chain, paste or QR-scan the address,
 **Fetch**, then **Write to drive…** and choose the drive's root folder. It runs
 entirely in your browser: Blockscout for the list, the image hosts for the
 pictures, a byte-exact port of the SDK's `.raw` writer for the textures. No
