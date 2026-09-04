@@ -13,6 +13,8 @@ bundle built without the SDK or the CLI. Hosted at https://tobyjaguar.com/passpo
   thirds still page. One-time "Tap the picture for details" hint, self-clearing.
 - Image reads that fail because the USB host owns the Airlock now say so, instead of
   "nothing inserted".
+- Title strip is not drawn while the drawer is open (its text bled through the translucent
+  drawer). Device screenshots of both states in `docs/gallery.png` and `docs/gallery-drawer.png`.
 
 ### Added
 - `web/`: static, no-server bundle builder ("plug in, open, paste, unplug"). Blockscout
