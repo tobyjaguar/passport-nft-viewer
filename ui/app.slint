@@ -171,11 +171,14 @@ component GalleryScreen inherits Rectangle {
         }
 
         // ---- title strip in whatever is left; chips show if there is room ----
+        // (hidden while the drawer is open, so nothing bleeds through its translucent back)
         Rectangle {
             width: 100%;
             vertical-stretch: 1;
             clip: true;
-            VerticalLayout {
+            if !Callbacks.sheet-visible: VerticalLayout {
+                width: 100%;
+                height: 100%;
                 padding-left: Theme.spacing-xl;
                 padding-right: Theme.spacing-xl;
                 padding-top: Theme.spacing-md;

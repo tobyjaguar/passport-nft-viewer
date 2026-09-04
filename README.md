@@ -6,6 +6,13 @@ A **read-only NFT gallery for the Foundation Passport Prime** hardware wallet. T
 
 ![Mara #17397 on Passport Prime](docs/first-image.png)
 
+<p>
+<img src="docs/gallery.png" width="240" alt="Gallery: the picture at full width with the collection, position and title beneath it">
+<img src="docs/gallery-drawer.png" width="240" alt="Gallery drawer: title, trait chips and Back/Prev/Next over the lower part of the picture">
+</p>
+
+*Gallery, 2026-09-03: the picture takes the height its aspect ratio needs, the title strip fills the rest, and a middle tap opens the drawer with the traits and the buttons. Both bundles here were built in the browser by the web wrapper.*
+
 ## Design in one paragraph
 
 Passport Prime has no network access for third-party apps, and this app never wants keys. So the work is split: `passport-nft-cli` (in the [workspace repo](https://github.com/tobyjaguar/passport-prime-dev), `host-tools/`) takes an **address** — watch-only, never a key — asks a **keyless public indexer** what it owns, downloads and downsizes each image, and converts it to KeyOS's native `.raw` texture with the SDK's own `foundation-asset-tool`. It writes a bundle to a USB drive or the Passport's Airlock. The device app reads that bundle through the KeyOS fs API (read access is grant-on-first-use — the user sees a permission prompt) and displays it, one texture resident at a time. The device never decodes an image and never contacts anything.
