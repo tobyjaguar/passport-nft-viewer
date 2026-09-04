@@ -94,63 +94,148 @@ component SourceScreen inherits VerticalLayout {
 component GalleryScreen inherits Rectangle {
     background: Theme.palette-background;
 
-    // ---- picture: everything below the status bar ----
-    Rectangle {
+    // The picture takes exactly the height it needs at full width (aspect kept,
+    // capped to the area); whatever is left underneath is the title strip.
+    property <length> area-h: root.height - UISize.control-center-status-bar-height;
+    property <int> iw: Callbacks.current-image.width;
+    property <int> ih: Callbacks.current-image.height;
+    property <bool> has-image: iw > 0 && ih > 0;
+    property <length> natural-h: has-image ? root.width * ih / iw : 480px;
+    property <length> pic-h: min(area-h, natural-h);
+    property <length> pic-w: (has-image && natural-h > area-h) ? area-h * iw / ih : root.width;
+
+    VerticalLayout {
         y: UISize.control-center-status-bar-height;
         width: 100%;
-        height: parent.height - UISize.control-center-status-bar-height;
-        clip: true;
+        height: area-h;
+        spacing: 0px;
 
-        if Callbacks.current-error == "": MediaImage {
-            width: parent.width;
-            height: parent.height;
-            source: Callbacks.current-image;
-            fit: ImageFit.contain;
-            rounded: false;
-            show-border: false;
-        }
+        // ---- picture ----
+        Rectangle {
+            width: 100%;
+            height: pic-h;
+            vertical-stretch: 0;
+            background: Theme.palette-card;
+            clip: true;
 
-        if Callbacks.current-error != "": Text {
-            width: parent.width - 2 * Theme.spacing-xl;
-            text: Callbacks.current-error;
-            color: Theme.palette-muted;
-            font-family: Theme.font-primary;
-            font-size: Theme.font-size-body;
-            horizontal-alignment: center;
-            vertical-alignment: center;
-            wrap: word-wrap;
-        }
+            if Callbacks.current-error == "": MediaImage {
+                x: (parent.width - self.width) / 2;
+                width: pic-w;
+                height: parent.height;
+                source: Callbacks.current-image;
+                fit: ImageFit.contain;
+                rounded: false;
+                show-border: false;
+            }
 
-        // tap zones: left third = previous, middle = show/hide details, right third = next
-        TouchArea {
-            x: 0; width: parent.width / 3; height: parent.height;
-            clicked => { Callbacks.prev-item(); }
-        }
-        TouchArea {
-            x: parent.width / 3; width: parent.width / 3; height: parent.height;
-            clicked => {
-                Callbacks.sheet-visible = !Callbacks.sheet-visible;
-                Callbacks.hint-visible = false;
+            if Callbacks.current-error != "": Text {
+                width: parent.width - 2 * Theme.spacing-xl;
+                text: Callbacks.current-error;
+                color: Theme.palette-muted;
+                font-family: Theme.font-primary;
+                font-size: Theme.font-size-body;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                wrap: word-wrap;
+            }
+
+            // tap zones: left third = previous, middle = show/hide details, right third = next
+            TouchArea {
+                x: 0; width: parent.width / 3; height: parent.height;
+                clicked => { Callbacks.prev-item(); }
+            }
+            TouchArea {
+                x: parent.width / 3; width: parent.width / 3; height: parent.height;
+                clicked => {
+                    Callbacks.sheet-visible = !Callbacks.sheet-visible;
+                    Callbacks.hint-visible = false;
+                }
+            }
+            TouchArea {
+                x: parent.width * 2 / 3; width: parent.width / 3; height: parent.height;
+                clicked => { Callbacks.next-item(); }
+            }
+
+            // one-time hint over the bottom of the picture, goes away on its own
+            if Callbacks.hint-visible && !Callbacks.sheet-visible: Text {
+                x: 0;
+                width: parent.width;
+                y: parent.height - Theme.spacing-lg - self.preferred-height;
+                height: self.preferred-height;
+                text: "Tap the picture for details";
+                color: Theme.palette-muted;
+                font-family: Theme.font-primary;
+                font-size: Theme.font-size-caption;
+                horizontal-alignment: center;
             }
         }
-        TouchArea {
-            x: parent.width * 2 / 3; width: parent.width / 3; height: parent.height;
-            clicked => { Callbacks.next-item(); }
+
+        // ---- title strip in whatever is left; chips show if there is room ----
+        Rectangle {
+            width: 100%;
+            vertical-stretch: 1;
+            clip: true;
+            VerticalLayout {
+                padding-left: Theme.spacing-xl;
+                padding-right: Theme.spacing-xl;
+                padding-top: Theme.spacing-md;
+                padding-bottom: Theme.spacing-md;
+                spacing: Theme.spacing-xs;
+                alignment: start;
+
+                HorizontalLayout {
+                    spacing: Theme.spacing-md;
+                    Text {
+                        text: Callbacks.current-collection;
+                        color: Theme.palette-muted;
+                        font-family: Theme.font-primary;
+                        font-size: Theme.font-size-caption;
+                        font-weight: Theme.font-weight-semibold;
+                        overflow: elide;
+                        horizontal-stretch: 1;
+                    }
+                    Text {
+                        text: Callbacks.current-position;
+                        color: Theme.palette-muted;
+                        font-family: Theme.font-primary;
+                        font-size: Theme.font-size-caption;
+                    }
+                }
+                Text {
+                    text: Callbacks.current-title;
+                    color: Theme.palette-foreground;
+                    font-family: Theme.font-primary;
+                    font-size: Theme.font-size-title;
+                    font-weight: Theme.font-weight-semibold;
+                    overflow: elide;
+                }
+                Rectangle {
+                    width: 100%;
+                    vertical-stretch: 1;
+                    clip: true;
+                    Flickable {
+                        width: 100%;
+                        height: 100%;
+                        viewport-height: strip-traits.preferred-height;
+                        strip-traits := VerticalLayout {
+                            width: parent.width;
+                            spacing: Theme.spacing-sm;
+                            alignment: start;
+                            padding-top: Theme.spacing-sm;
+                            for row in Callbacks.current-trait-rows: HorizontalLayout {
+                                spacing: Theme.spacing-sm;
+                                alignment: start;
+                                for t in row: Chip {
+                                    text: t.label + ": " + t.value;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
-    // ---- one-time hint, goes away on its own ----
-    if Callbacks.hint-visible && !Callbacks.sheet-visible: Text {
-        x: 0;
-        width: parent.width;
-        y: parent.height - Theme.spacing-xl - self.preferred-height;
-        height: self.preferred-height;
-        text: "Tap the picture for details";
-        color: Theme.palette-muted;
-        font-family: Theme.font-primary;
-        font-size: Theme.font-size-caption;
-        horizontal-alignment: center;
-    }
     Timer {
         interval: 3s;
         running: Callbacks.hint-visible;

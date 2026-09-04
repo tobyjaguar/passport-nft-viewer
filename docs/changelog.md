@@ -6,6 +6,14 @@
 drive… → `AIRLOCK` root → unplug → NFTs → Load from Airlock → tap an item → gallery. First
 bundle built without the SDK or the CLI. Hosted at https://tobyjaguar.com/passport-nft-viewer/
 
+### Changed (gallery, verified on device 2026-09-03)
+- The picture takes full width and only the height its aspect ratio needs; the collection,
+  position and title sit directly underneath, with trait chips when there is room. A middle
+  tap on the picture toggles a drawer with the full details and Back/Prev/Next; the outer
+  thirds still page. One-time "Tap the picture for details" hint, self-clearing.
+- Image reads that fail because the USB host owns the Airlock now say so, instead of
+  "nothing inserted".
+
 ### Added
 - `web/`: static, no-server bundle builder ("plug in, open, paste, unplug"). Blockscout
   enumeration, in-browser image decode/resize, a byte-exact JS port of the SDK's `.raw`

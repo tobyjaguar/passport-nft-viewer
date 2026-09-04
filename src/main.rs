@@ -236,6 +236,10 @@ fn show_item(ui: &AppWindow, state: &Rc<RefCell<State>>, index: usize) {
                 cb.set_current_image(image);
             }
         }
+        Err(storage::StorageError::NoMedia) if location == storage::Location::Airlock => {
+            log::info!("nft-viewer: {path}: Airlock owned by the USB host");
+            cb.set_current_error("The Airlock is in use by the computer on USB. Unplug the cable, then tap the picture area to try again.".into());
+        }
         Err(e) => {
             log::warn!("nft-viewer: {path}: {e}");
             cb.set_current_error(format!("Could not read {path}: {e}").into());
