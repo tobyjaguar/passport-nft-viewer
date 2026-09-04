@@ -91,16 +91,14 @@ component SourceScreen inherits VerticalLayout {
     }
 }
 
-component GalleryScreen inherits VerticalLayout {
-    padding-top: UISize.control-center-status-bar-height;
-    padding-bottom: Theme.spacing-lg;
-    spacing: 0px;
+component GalleryScreen inherits Rectangle {
+    background: Theme.palette-background;
 
-    // ---- image, ~ the top 60% of the screen ----
+    // ---- picture: everything below the status bar ----
     Rectangle {
+        y: UISize.control-center-status-bar-height;
         width: 100%;
-        height: 480px;
-        background: Theme.palette-card;
+        height: parent.height - UISize.control-center-status-bar-height;
         clip: true;
 
         if Callbacks.current-error == "": MediaImage {
@@ -123,10 +121,17 @@ component GalleryScreen inherits VerticalLayout {
             wrap: word-wrap;
         }
 
-        // swipe/tap zones: left third = previous, right third = next
+        // tap zones: left third = previous, middle = show/hide details, right third = next
         TouchArea {
             x: 0; width: parent.width / 3; height: parent.height;
             clicked => { Callbacks.prev-item(); }
+        }
+        TouchArea {
+            x: parent.width / 3; width: parent.width / 3; height: parent.height;
+            clicked => {
+                Callbacks.sheet-visible = !Callbacks.sheet-visible;
+                Callbacks.hint-visible = false;
+            }
         }
         TouchArea {
             x: parent.width * 2 / 3; width: parent.width / 3; height: parent.height;
@@ -134,92 +139,121 @@ component GalleryScreen inherits VerticalLayout {
         }
     }
 
-    // ---- title sheet ----
-    VerticalLayout {
-        padding-left: Theme.spacing-xl;
-        padding-right: Theme.spacing-xl;
-        padding-top: Theme.spacing-lg;
-        spacing: Theme.spacing-sm;
-        vertical-stretch: 1;
+    // ---- one-time hint, goes away on its own ----
+    if Callbacks.hint-visible && !Callbacks.sheet-visible: Text {
+        x: 0;
+        width: parent.width;
+        y: parent.height - Theme.spacing-xl - self.preferred-height;
+        height: self.preferred-height;
+        text: "Tap the picture for details";
+        color: Theme.palette-muted;
+        font-family: Theme.font-primary;
+        font-size: Theme.font-size-caption;
+        horizontal-alignment: center;
+    }
+    Timer {
+        interval: 3s;
+        running: Callbacks.hint-visible;
+        triggered => { Callbacks.hint-visible = false; }
+    }
 
-        HorizontalLayout {
-            spacing: Theme.spacing-md;
+    // ---- details sheet over the lower part of the picture ----
+    if Callbacks.sheet-visible: Rectangle {
+        x: 0;
+        y: parent.height - self.height;
+        width: 100%;
+        height: 340px;
+        background: Theme.palette-card.with-alpha(0.94);
+
+        // swallow taps so they do not fall through to the paging zones
+        TouchArea { }
+
+        VerticalLayout {
+            padding-left: Theme.spacing-xl;
+            padding-right: Theme.spacing-xl;
+            padding-top: Theme.spacing-lg;
+            padding-bottom: Theme.spacing-lg;
+            spacing: Theme.spacing-sm;
+
+            HorizontalLayout {
+                spacing: Theme.spacing-md;
+                Text {
+                    text: Callbacks.current-collection;
+                    color: Theme.palette-muted;
+                    font-family: Theme.font-primary;
+                    font-size: Theme.font-size-caption;
+                    font-weight: Theme.font-weight-semibold;
+                    overflow: elide;
+                    horizontal-stretch: 1;
+                }
+                Text {
+                    text: Callbacks.current-position;
+                    color: Theme.palette-muted;
+                    font-family: Theme.font-primary;
+                    font-size: Theme.font-size-caption;
+                }
+            }
+
             Text {
-                text: Callbacks.current-collection;
-                color: Theme.palette-muted;
+                text: Callbacks.current-title;
+                color: Theme.palette-foreground;
                 font-family: Theme.font-primary;
-                font-size: Theme.font-size-caption;
+                font-size: Theme.font-size-title;
                 font-weight: Theme.font-weight-semibold;
                 overflow: elide;
-                horizontal-stretch: 1;
             }
-            Text {
-                text: Callbacks.current-position;
-                color: Theme.palette-muted;
-                font-family: Theme.font-primary;
-                font-size: Theme.font-size-caption;
-            }
-        }
 
-        Text {
-            text: Callbacks.current-title;
-            color: Theme.palette-foreground;
-            font-family: Theme.font-primary;
-            font-size: Theme.font-size-title;
-            font-weight: Theme.font-weight-semibold;
-            overflow: elide;
-        }
-
-        // traits as chips, wrapped into rows of three
-        Rectangle {
-            width: 100%;
-            vertical-stretch: 1;
-            clip: true;
-            Flickable {
+            // traits as chips, wrapped into rows of two
+            Rectangle {
                 width: 100%;
-                height: 100%;
-                viewport-height: traits-content.preferred-height;
-                traits-content := VerticalLayout {
-                    width: parent.width;
-                    spacing: Theme.spacing-sm;
-                    alignment: start;
-                    for row in Callbacks.current-trait-rows: HorizontalLayout {
+                vertical-stretch: 1;
+                clip: true;
+                Flickable {
+                    width: 100%;
+                    height: 100%;
+                    viewport-height: traits-content.preferred-height;
+                    traits-content := VerticalLayout {
+                        width: parent.width;
                         spacing: Theme.spacing-sm;
                         alignment: start;
-                        for t in row: Chip {
-                            text: t.label + ": " + t.value;
+                        for row in Callbacks.current-trait-rows: HorizontalLayout {
+                            spacing: Theme.spacing-sm;
+                            alignment: start;
+                            for t in row: Chip {
+                                text: t.label + ": " + t.value;
+                            }
                         }
-                    }
-                    if Callbacks.current-description != "": Text {
-                        text: Callbacks.current-description;
-                        color: Theme.palette-muted;
-                        font-family: Theme.font-primary;
-                        font-size: Theme.font-size-caption;
-                        wrap: word-wrap;
+                        if Callbacks.current-description != "": Text {
+                            text: Callbacks.current-description;
+                            color: Theme.palette-muted;
+                            font-family: Theme.font-primary;
+                            font-size: Theme.font-size-caption;
+                            wrap: word-wrap;
+                        }
                     }
                 }
             }
-        }
 
-        HorizontalLayout {
-            spacing: Theme.spacing-md;
-            Button {
-                text: "Back";
-                variant: ButtonVariant.secondary;
-                size: ControlSize.md;
-                clicked => { Callbacks.close-gallery(); }
-            }
-            Rectangle { horizontal-stretch: 1; }
-            Button {
-                text: "Prev";
-                variant: ButtonVariant.secondary;
-                size: ControlSize.md;
-                clicked => { Callbacks.prev-item(); }
-            }
-            Button {
-                text: "Next";
-                size: ControlSize.md;
-                clicked => { Callbacks.next-item(); }
+            HorizontalLayout {
+                spacing: Theme.spacing-md;
+                Button {
+                    text: "Back";
+                    variant: ButtonVariant.secondary;
+                    size: ControlSize.md;
+                    clicked => { Callbacks.close-gallery(); }
+                }
+                Rectangle { horizontal-stretch: 1; }
+                Button {
+                    text: "Prev";
+                    variant: ButtonVariant.secondary;
+                    size: ControlSize.md;
+                    clicked => { Callbacks.prev-item(); }
+                }
+                Button {
+                    text: "Next";
+                    size: ControlSize.md;
+                    clicked => { Callbacks.next-item(); }
+                }
             }
         }
     }

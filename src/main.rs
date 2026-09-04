@@ -54,6 +54,10 @@ fn app_main(_cx: AppContext, ui: AppWindow) {
         let state = state.clone();
         cb.on_open_item(move |index| {
             let Some(ui) = ui_weak.upgrade() else { return };
+            // Fresh item from the list: full picture first, details on tap.
+            let cb = ui.global::<Callbacks>();
+            cb.set_sheet_visible(false);
+            cb.set_hint_visible(true);
             show_item(&ui, &state, index.max(0) as usize);
         });
     }

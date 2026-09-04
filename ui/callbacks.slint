@@ -33,6 +33,10 @@ export global Callbacks {
     in property <string> current-error: "";
     // traits pre-grouped into rows (2 per row) so they wrap on a 480px screen
     in property <[[TraitRow]]> current-trait-rows: [];
+    // details sheet over the picture: hidden when an item opens, middle tap toggles
+    in-out property <bool> sheet-visible: false;
+    // one-time "tap for details" hint, cleared by a timer or the first toggle
+    in-out property <bool> hint-visible: false;
     callback open-item(int);
     callback next-item();
     callback prev-item();
