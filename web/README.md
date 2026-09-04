@@ -69,7 +69,7 @@ brave-browser --headless=new --disable-gpu --virtual-time-budget=120000 \
 
 ## Known limits
 
-- Direct drive writing is Chromium-only; Firefox and Safari get the `.zip`.
+- Direct drive writing is Chromium-only; Firefox and Safari get the `.zip`. **Brave ships with the API off**: enable `brave://flags/#file-system-access-api` and relaunch, or use the `.zip`.
 - Blockscout can return zero items for very large wallets; the page says so rather than pretending.
 - Resampling uses the browser's "high" quality filter, not Lanczos3, so pixels differ slightly from the CLI's output. The container is identical.
 - SVG NFTs are rasterised by the browser (the CLI skips them); an SVG that embeds foreign content taints the canvas and is skipped with a reason.

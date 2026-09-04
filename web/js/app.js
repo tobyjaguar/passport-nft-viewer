@@ -212,8 +212,15 @@ function init() {
 
   if (!supportsDirectoryWrite()) {
     els.write.disabled = true;
-    els.optionDrive.querySelector('.hint').textContent =
-      'Direct drive access needs a Chromium browser (Chrome, Edge, Brave). Use the .zip instead.';
+    const hint = els.optionDrive.querySelector('.hint');
+    hint.textContent = 'Direct drive access needs a Chromium browser (Chrome, Edge, or Brave with the flag below). Use the .zip instead.';
+    // Brave ships with the File System Access API off; the flag turns it on.
+    Promise.resolve(navigator.brave?.isBrave?.()).then((brave) => {
+      if (brave) {
+        hint.textContent =
+          'Brave turns this API off by default. Open brave://flags/#file-system-access-api, set it to Enabled, relaunch, and reload this page. Or use the .zip.';
+      }
+    }).catch(() => {});
   }
   if (!supportsCamera()) els.scan.hidden = true;
 
